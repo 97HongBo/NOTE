@@ -88,3 +88,47 @@
       9. `SELECt id ,id % 3 idd FROM test1 WHERE MATCH('this is | nothing ') GROUP BY idd; SHOW PROFILE`
       10. `CALL KEYWORDS('one  two  THREE ', 'test1')`
 
+### sphinx匹配模式
+
+* SPH_MATCH_ALL 匹配所有查询分词（默认模式）
+  * 如"苹果手机"，不匹配"我有一个手机"，但可以匹配"我有一个手机，它是苹果品牌"。
+  * 因为"苹果手机"被分成了"苹果"，"手机" 两个单词，匹配的条件是必须同时包含这两个词，所以"我有一个手机"不符合匹配要求
+* SPH_MATCH_ANY 匹配查询词中的任意一个分词
+  * 如"苹果手机"，会匹配"我有一个苹果"，因为索引库中包含任一个分词即可被搜到，当然也能匹配"我有一个手机，它是苹果品牌"
+* SPH_MATCH_PHRASE 将整个查询看作一个词组，要求按顺序完整匹配；
+  * 这个与MYSQL中的"select * from tab where keyword like '%苹果手机%'  "类似，如"华为手机"，不匹配"我有一个手机是华为"，可以匹配"我有一个华为手机"
+* SPH_MATCH_BOOLEAN,将查询看作一个布尔表达式，可以简单的与或非运算
+  * 如(apple !banana)|(apple !pear)
+  * 意思是搜索出所有匹配apple，但不匹配banana和pear的查询分词
+* SPH_MATCH_EXTENDED 2 扩展匹配模式
+  * 将查询看作一个SPHINX内部语言的表达式
+  * 或(OR)操作符
+    * hello | word
+  * 非(NOT)操作符
+    * hello -world
+    * hello !world
+  * 字段(field)搜索
+    * @title hello @body world
+    * title 中包含hello ; body字段中包含world
+  * 字段限位修饰符
+    * @body[50] hello
+      * body字段位数限制在50以内
+  * 多字段搜索符
+    * @(title,body) hello world
+      * title 或 body 字段中包含hello world
+  * 全字段搜索
+    * @* hello
+      * 只要其中一列包含hello
+  * 近似搜索符
+    * "hello world"~10
+      * hello world 之间最多有10个词
+  * 阀值匹配符
+    * "the world is wonderful place"/3
+    * 至少匹配3个词
+  * 严格有序搜索
+    * aaa<<bbb<<ccc
+    * aaa bbb ccc 必须按先后顺序出现
+  * 字段开始和字段结束修饰符
+    * ^hello....world$
+    * 限定字符以hello开头，以world结尾
+
